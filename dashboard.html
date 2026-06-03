@@ -333,7 +333,19 @@
 
   async function loadDropdown() {
     const res = await callBackendAPI("getReferensi");
-    if (res) {
+    
+    // Tambahkan baris ini untuk mengecek jika server mengirimkan pesan error
+    if (res && res.success === false) {
+      console.error("Error dari server:", res.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Server Error',
+        text: res.message
+      });
+      return; // Hentikan proses agar tidak crash
+    }
+
+    if (res && res.metode) {
       referensiData = res;
       // Isi dropdown metode pembayaran
       const selectMetode = $("#txMetode");
