@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FinFlow — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+  <style>
+    :root {
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --c-bg:         #f5f6f8;
+      --c-surface:    #ffffff;
+      --c-border:     #e8eaee;
+      --c-border-mid: #d1d5dc;
+      --c-text:       #1a1f2e;
+      --c-text-mid:   #4a5568;
+      --c-text-muted: #8a94a6;
+      --c-primary:    #2563eb;
+      --c-primary-h:  #1d4ed8;
+      --c-primary-lt: #eff4ff;
+      --c-green:      #059669;
+      --c-green-lt:   #ecfdf5;
+      --c-red:        #dc2626;
+      --c-red-lt:     #fef2f2;
+      --c-amber:      #d97706;
+      --c-amber-lt:   #fffbeb;
+      --c-teal:       #0891b2;
+      --radius-sm:    6px;
+      --radius-md:    10px;
+      --radius-lg:    16px;
+      --transition:   all 0.2s ease;
+    }
+    body { background-color: var(--c-bg); color: var(--c-text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+    .app-wrapper { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem 4rem 1rem; }
+    .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; background: var(--c-surface); padding: 1.25rem 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--c-border); }
+    .header-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--c-primary), #3b82f6); color: #fff; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+    .brand-name { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: var(--c-text); line-height: 1; }
+    .header-toolbar { display: flex; gap: 0.5rem; align-items: center; }
+    .tool-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--c-surface); border: 1px solid var(--c-border-mid); border-radius: var(--radius-md); padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 500; color: var(--c-text-mid); cursor: pointer; transition: var(--transition); text-decoration: none; }
+    .tool-btn:hover { background: var(--c-bg); border-color: var(--c-text-muted); color: var(--c-text); }
+    .tool-btn i { font-size: 1rem; }
+    .btn-tambah { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+    .btn-tambah:hover { background: var(--c-primary-h); border-color: var(--c-primary-h); color: #fff; }
+    .btn-chart { color: var(--c-teal); border-color: #cdeef5; background: #f0fbfc; }
+    .btn-chart:hover { background: #e0f7fa; color: #0e7490; }
+    .btn-hutang { color: #6d28d9; border-color: #e9d5ff; background: #f3e8ff; }
+    .btn-hutang:hover { background: #f3e8ff; color: #5b21b6; }
+    
+    /* Ringkasan Cards */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .summary-card { background: var(--c-surface); border-radius: var(--radius-lg); border: 1px solid var(--c-border); padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; position: relative; overflow: hidden; }
+    .card-icon { width: 52px; height: 52px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .card-info { display: flex; flex-direction: column; }
+    .card-label { font-size: 0.85rem; font-weight: 500; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .card-value { font-size: 1.75rem; font-weight: 600; color: var(--c-text); line-height: 1.1; font-feature-settings: "tnum"; }
+    .card--balance .card-icon { background: var(--c-primary-lt); color: var(--c-primary); }
+    .card--in .card-icon { background: var(--c-green-lt); color: var(--c-green); }
+    .card--out .card-icon { background: var(--c-red-lt); color: var(--c-red); }
+
+    /* Filter Bar & Table Section */
+    .main-section { background: var(--c-surface); border-radius: var(--radius-lg); border: 1px solid var(--c-border); padding: 1.5rem; }
+    .filter-wrapper { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--c-border); padding-bottom: 1.25rem; }
+    .filter-left { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .filter-left label { font-size: 0.85rem; font-weight: 600; color: var(--c-text-mid); }
+    .filter-left select, .filter-left input { width: auto; font-size: 0.9rem; border-radius: var(--radius-sm); border-color: var(--c-border-mid); }
+
+    /* DataTables Style */
+    table.dataTable { border-collapse: collapse !important; margin-top: 0.75rem !important; margin-bottom: 1rem !important; }
+    table.dataTable thead th { background-color: #f8fafc; color: var(--c-text-mid); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 1px solid var(--c-border-mid) !important; padding: 0.75rem 1rem !important; }
+    table.dataTable tbody td { font-size: 0.95rem; color: var(--c-text-mid); padding: 0.85rem 1rem !important; border-bottom: 1px solid var(--c-border) !important; vertical-align: middle; }
+    table.dataTable tbody tr:hover { background-color: #fafbfc; }
+    .badge-in { background-color: var(--c-green-lt); color: var(--c-green); font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; }
+    .badge-out { background-color: var(--c-red-lt); color: var(--c-red); font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; }
+    
+    /* Footer Credit */
+    .app-credit { font-family: var(--font-body); color: var(--c-text-muted); }
+    .credit-divider { border-top: 1px dashed var(--c-border-mid); opacity: 0.5; max-width: 80%; margin: 0 auto; }
+    .credit-text { font-size: 0.85rem; font-weight: 500; }
+    .app-logo-mini { font-family: var(--font-display); font-weight: bold; color: var(--c-primary); }
+    .credit-subtext { font-size: 0.78rem; }
+    .dev-name { color: var(--c-text); }
+    .ai-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; margin: 0 2px; }
+    .gemini-bg { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .claude-bg { background-color: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+    .animate-pulse { display: inline-block; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+    /* Responsivitas */
+    @media (max-width: 768px) {
+      .summary-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+      .app-header { flex-direction: column; gap: 1rem; text-align: center; }
+      .header-toolbar { width: 100%; justify-content: center; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+  <div class="d-flex justify-content-end mb-2">
+     <button onclick="logoutFinFlow()" class="btn btn-sm btn-outline-secondary py-1" style="font-size: 0.75rem; border-radius: 6px;">
+       <i class="bi bi-box-arrow-right"></i> Pindah Akun Google
+     </button>
+  </div>
+
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo"><i class="bi bi-water"></i></div>
+      <div class="brand-name">FinFlow</div>
+    </div>
+    <div class="header-toolbar">
+      <button class="tool-btn btn-chart" onclick="bukaChart()"><i class="bi bi-bar-chart-line"></i><span>Dashboard</span></button>
+      <button class="tool-btn btn-hutang" onclick="bukaHutang()"><i class="bi bi-arrow-left-right"></i><span>Hutang</span></button>
+      <button class="tool-btn btn-tambah" data-bs-toggle="modal" data-bs-target="#formModal"><i class="bi bi-plus-lg"></i><span>Transaksi Baru</span></button>
+    </div>
+  </header>
+
+  <div class="summary-grid">
+    <div class="summary-card card--balance">
+      <div class="card-icon"><i class="bi bi-wallet2"></i></div>
+      <div class="card-info"><span class="card-label">Saldo Bersih</span><span class="card-value" id="cardSaldo">Rp 0</span></div>
+    </div>
+    <div class="summary-card card--in">
+      <div class="card-icon"><i class="bi bi-arrow-down-left-circle"></i></div>
+      <div class="card-info"><span class="card-label">Total Pemasukan</span><span class="card-value" id="cardPemasukan">Rp 0</span></div>
+    </div>
+    <div class="summary-card card--out">
+      <div class="card-icon"><i class="bi bi-arrow-up-right-circle"></i></div>
+      <div class="card-info"><span class="card-label">Total Pengeluaran</span><span class="card-value" id="cardPengeluaran">Rp 0</span></div>
+    </div>
+  </div>
+
+  <div class="main-section">
+    <div class="filter-wrapper">
+      <div class="filter-left">
+        <label><i class="bi bi-funnel"></i> Filter:</label>
+        <select id="filterPeriode" class="form-select form-select-sm">
+          <option value="semua" selected>Semua Waktu</option>
+          <option value="mingguan">Minggu Ini</option>
+          <option value="bulanan">Bulan Ini</option>
+          <option value="tahunan">Tahun Ini</option>
+          <option value="custom">Rentang Tanggal</option>
+        </select>
+        <div id="customDateContainer" class="d-none align-items-center gap-1">
+          <input type="date" id="filterTglAwal" class="form-control form-control-sm">
+          <span class="text-muted small">s.d</span>
+          <input type="date" id="filterTglAkhir" class="form-control form-control-sm">
+        </div>
+      </div>
+      <div>
+        <button id="btnExport" class="tool-btn py-1 px-3"><i class="bi bi-file-earmark-excel text-success"></i><span>Ekspor Excel</span></button>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table id="mainTable" class="table kasira-table" style="width:100%"></table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="formModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+      <div class="modal-header text-white" style="background: var(--c-primary)">
+        <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Catat Transaksi</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss=\"modal\"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="trxForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Jenis Transaksi</label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="jenis" id="radioIn" value="Pemasukan" checked>
+                <label class="form-check-label" for="radioIn">Pemasukan</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="jenis" id="radioOut" value="Pengeluaran">
+                <label class="form-check-label" for="radioOut">Pengeluaran</label>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Tanggal</label>
+            <input type="date" id="txTanggal" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Kategori</label>
+            <select id="txKategori" class="form-select" required><option value="">Pilih Kategori...</option></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Jumlah (Rp)</label>
+            <input type="text" id="txJumlah" class="form-control" placeholder="0" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Metode Pembayaran</label>
+            <select id="txMetode" class="form-select" required><option value="">Pilih Metode...</option></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Deskripsi / Catatan</label>
+            <textarea id="txDeskripsi" class="form-control" rows="2" placeholder="Keterangan transaksi (opsional)"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" id="btnSimpan" class="btn btn-primary px-4">Simpan Transaksi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="chartModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+      <div class="modal-header text-white" style="background: linear-gradient(135deg, #1e3a8a, #1e40af)">
+        <h5 class="modal-title"><i class="bi bi-bar-chart-line me-2"></i>Dashboard Visualisasi</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row g-4">
+          <div class="col-md-6"><h6 class="fw-bold mb-3">Proporsi Pemasukan</h6><canvas id="chartPemasukanCanvas"></canvas></div>
+          <div class="col-md-6"><h6 class="fw-bold mb-3">Proporsi Pengeluaran</h6><canvas id="chartPengeluaranCanvas"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="hutangModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+      <div class="modal-header text-white" style="background: linear-gradient(135deg, #4b1d96, #6d28d9)">
+        <h5 class="modal-title"><i class="bi bi-arrow-left-right me-2"></i>Sistem Hutang &amp; Piutang</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+         <p class="text-muted small">Fitur manajemen hutang & cicilan sedang mengambil integrasi API secara otomatis.</p>
+         <div id="hpDashList" class="d-flex flex-column gap-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  // =============================================================
+  // 🗝️ KONFIGURASI API UTAMA (PENGGANTI GOOGLE.SCRIPT.RUN)
+  // =============================================================
+  // PASTE URL WEB APP APPS SCRIPT KAMU (YANG "EXECUTE AS: ME" & "ANYONE") DI SINI:
+  const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycby_GO1GYgEpEX2npQb1JvKwklyHSwy66KMiGQzhl8rVF2qQ-YoO1yFrye3UHphYTUCbzA/exec";
+  
+  const USER_ACCESS_TOKEN = localStorage.getItem("finflow_access_token");
+
+  // Jika user coba-coba bypass masuk tanpa login, tendang balik ke halaman login depan
+  if (!USER_ACCESS_TOKEN) {
+    window.location.href = "index.html";
+  }
+
+  // Fungsi jembatan utama untuk mengirim data aman lintas domain ke Apps Script
+  async function callBackendAPI(actionName, dataPayload = {}) {
+    const payload = {
+      action: actionName,
+      token: USER_ACCESS_TOKEN,
+      data: dataPayload
+    };
+    try {
+      const response = await fetch(BACKEND_API_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      return await response.json();
+    } catch (err) {
+      console.error("Koneksi API Gagal:", err);
+      Swal.fire({ icon: 'error', title: 'Koneksi Bermasalah', text: 'Gagal menghubungi database Google Drive Anda.' });
+    }
+  }
+
+  function logoutFinFlow() {
+    localStorage.removeItem("finflow_access_token");
+    window.location.href = "index.html";
+  }
+
+  // =============================================================
+  // 📊 LOGIKA OPERASIONAL FRONTEND (MIGRASI DARI SCRIPT.HTML)
+  // =============================================================
+  const formatRibuan = (num) => {
+    if (!num && num !== 0) return '';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\\d))/g, ".");
+  };
+
+  const unformatRibuan = (str) => {
+    if (!str) return 0;
+    return Number(str.toString().replace(/\./g, ''));
+  };
+
+  let cachedData = [];
+  let referensiData = {};
+
+  $(document).ready(async function () {
+    Swal.fire({ title: 'Sinkronisasi Cloud...', text: 'Mengunduh data dari Drive Anda', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    await loadDropdown();
+    initFilterSystem();
+    await refreshDashboardData();
+    Swal.close();
+
+    $("#btnSimpan").click(saveData);
+    
+    // Auto format ribuan saat ketik jumlah
+    document.getElementById('txJumlah').addEventListener('input', function() {
+      const v = unformatRibuan(this.value);
+      this.value = formatRibuan(v);
+    });
+
+    // Set default tanggal hari ini
+    document.getElementById('txTanggal').value = new Date().toISOString().split('T')[0];
+    
+    // Dengarkan perubahan jenis transaksi untuk ganti isi dropdown kategori
+    $('input[name="jenis"]').change(updateKategoriDropdown);
+  });
+
+  async function loadDropdown() {
+    const res = await callBackendAPI("getReferensi");
+    if (res) {
+      referensiData = res;
+      // Isi dropdown metode pembayaran
+      const selectMetode = $("#txMetode");
+      selectMetode.html('<option value="">Pilih Metode...</option>');
+      res.metode.forEach(m => selectMetode.append(`<option value="${m}">${m}</option>`));
+      updateKategoriDropdown();
+    }
+  }
+
+  function updateKategoriDropdown() {
+    const jenisTerpilih = $('input[name="jenis"]:checked').val();
+    const selectKategori = $("#txKategori");
+    selectKategori.html('<option value="">Pilih Kategori...</option>');
+    
+    if (referensiData.kategoriPerJenis && referensiData.kategoriPerJenis[jenisTerpilih]) {
+      referensiData.kategoriPerJenis[jenisTerpilih].forEach(k => {
+        selectKategori.append(`<option value="${k}">${k}</option>`);
+      });
+    }
+  }
+
+  async function refreshDashboardData() {
+    const data = await callBackendAPI("getTransaksi");
+    cachedData = data || [];
+    renderMainTable(cachedData);
+    calculateCards(cachedData);
+  }
+
+  function renderMainTable(data) {
+    if ($.fn.DataTable.isDataTable('#mainTable')) {
+      $('#mainTable').DataTable().destroy();
+    }
+
+    $('#mainTable').DataTable({
+      data: data,
+      columns: [
+        { data: 'id', title: 'ID', width: '5%' },
+        { data: 'tanggal', title: 'Tanggal', width: '15%' },
+        { 
+          data: 'jenis', title: 'Jenis', width: '12%',
+          render: (d) => d === 'Pemasukan' ? `<span class="badge-in">IN</span>` : `<span class="badge-out">OUT</span>`
+        },
+        { data: 'kategori', title: 'Kategori', width: '18%' },
+        { 
+          data: 'jumlah', title: 'Jumlah', width: '15%',
+          render: (d) => 'Rp ' + formatRibuan(d)
+        },
+        { data: 'metode', title: 'Metode', width: '15%' },
+        { data: 'deskripsi', title: 'Keterangan', width: '20%' }
+      ],
+      order: [[0, 'desc']],
+      pageLength: 10,
+      language: { search: "_INPUT_", searchPlaceholder: "Cari transaksi..." }
+    });
+  }
+
+  function calculateCards(data) {
+    const totalIn = data.filter(f => f.jenis === 'Pemasukan').reduce((a, b) => a + Number(b.jumlah), 0);
+    const totalOut = data.filter(f => f.jenis !== 'Pemasukan').reduce((a, b) => a + Number(b.jumlah), 0);
+    const saldo = totalIn - totalOut;
+
+    $("#cardPemasukan").text('Rp ' + formatRibuan(totalIn));
+    $("#cardPengeluaran").text('Rp ' + formatRibuan(totalOut));
+    $("#cardSaldo").text('Rp ' + formatRibuan(saldo));
+  }
+
+  function initFilterSystem() {
+    $("#filterPeriode").change(function() {
+      const v = this.value;
+      if (v === 'custom') {
+        $("#customDateContainer").removeClass('d-none').addClass('d-flex');
+      } else {
+        $("#customDateContainer").removeClass('d-flex').addClass('d-none');
+        applyFilterPeriode(v);
+      }
+    });
+
+    $("#filterTglAwal, #filterTglAkhir").change(function() {
+      applyFilterCustomRange();
+    });
+  }
+
+  function applyFilterPeriode(periode) {
+    if (periode === 'semua') {
+      renderMainTable(cachedData);
+      return;
+    }
+    const now = new Date();
+    let filtered = cachedData.filter(item => {
+      const itemDate = new Date(item.tanggal);
+      if (periode === 'mingguan') {
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return itemDate >= oneWeekAgo;
+      } else if (periode === 'bulanan') {
+        return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+      } else if (periode === 'tahunan') {
+        return itemDate.getFullYear() === now.getFullYear();
+      }
+      return true;
+    });
+    renderMainTable(filtered);
+  }
+
+  function applyFilterCustomRange() {
+    const tglAwal = $("#filterTglAwal").val();
+    const tglAkhir = $("#filterTglAkhir").val();
+    if (!tglAwal || !tglAkhir) return;
+
+    const start = new Date(tglAwal);
+    const end = new Date(tglAkhir);
+    end.setHours(23,59,59);
+
+    let filtered = cachedData.filter(item => {
+      const itemDate = new Date(item.tanggal);
+      return itemDate >= start && itemDate <= end;
+    });
+    renderMainTable(filtered);
+  }
+
+  async function saveData() {
+    const form = document.getElementById('trxForm');
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const payload = {
+      tanggal: $("#txTanggal").val(),
+      jenis: $('input[name="jenis"]:checked').val(),
+      kategori: $("#txKategori").val(),
+      jumlah: unformatRibuan($("#txJumlah").val()),
+      metode: $("#txMetode").val(),
+      deskripsi: $("#txDeskripsi").val()
+    };
+
+    Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    const res = await callBackendAPI("tambahTransaksi", payload);
+    Swal.close();
+
+    if (res && res.success) {
+      Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.message, timer: 1500, showConfirmButton: false });
+      $("#formModal").modal('hide');
+      form.reset();
+      document.getElementById('txTanggal').value = new Date().toISOString().split('T')[0];
+      await refreshDashboardData();
+    } else {
+      Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: res ? res.message : 'Terjadi kesalahan internal.' });
+    }
+  }
+
+  // =============================================================
+  // 📊 VISUALISASI GRAPH/CHART (MIGRASI DARI CHARTSCRIPT.HTML)
+  // =============================================================
+  let chartInObj = null;
+  let chartOutObj = null;
+
+  async function bukaChart() {
+    new bootstrap.Modal('#chartModal').show();
+    setTimeout(renderCharts, 400); // Beri jeda animasi modal bootstrap selesai
+  }
+
+  function renderCharts() {
+    const categoriesIn = {};
+    const categoriesOut = {};
+
+    cachedData.forEach(item => {
+      const nominal = Number(item.jumlah);
+      if (item.jenis === 'Pemasukan') {
+        categoriesIn[item.kategori] = (categoriesIn[item.kategori] || 0) + nominal;
+      } else {
+        categoriesOut[item.kategori] = (categoriesOut[item.kategori] || 0) + nominal;
+      }
+    });
+
+    const PALETTE = ['#2563eb','#059669','#0891b2','#d97706','#dc2626','#6d28d9','#ea580c'];
+
+    if (chartInObj) chartInObj.destroy();
+    if (chartOutObj) chartOutObj.destroy();
+
+    const ctxIn = document.getElementById('chartPemasukanCanvas').getContext('2d');
+    chartInObj = new Chart(ctxIn, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(categoriesIn),
+        datasets: [{ data: Object.values(categoriesIn), backgroundColor: PALETTE }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    const ctxOut = document.getElementById('chartPengeluaranCanvas').getContext('2d');
+    chartOutObj = new Chart(ctxOut, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(categoriesOut),
+        datasets: [{ data: Object.values(categoriesOut), backgroundColor: PALETTE }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+
+  // =============================================================
+  // 💰 LOGIKA HUTANG PIUTANG DUMMY MODAL BRIDGE
+  // =============================================================
+  async function bukaHutang() {
+    new bootstrap.Modal('#hutangModal').show();
+    const res = await callBackendAPI("getRingkasanHutangPiutang");
+    const container = $("#hpDashList");
+    container.html('');
+    
+    if (res && res.semua && res.semua.length > 0) {
+       res.semua.forEach(h => {
+          container.append(`
+            <div class="p-3 border rounded mb-2 bg-light">
+               <div class="d-flex justify-content-between">
+                  <strong>${h.nama} <span class="badge bg-secondary small">${h.jenis}</span></strong>
+                  <span class="text-danger fw-bold">Sisa: Rp ${formatRibuan(h.sisa)}</span>
+               </div>
+               <small class="text-muted">Total Awal: Rp ${formatRibuan(h.total)} · Status: ${h.status}</small>
+            </div>
+          `);
+       });
+    } else {
+       container.html('<p class="text-muted text-center py-4">Belum ada data hutang atau piutang aktif.</p>');
+    }
+  }
+</script>
+
+</body>
+</html>
