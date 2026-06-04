@@ -298,12 +298,14 @@
   // =============================================================
   const formatRibuan = (num) => {
     if (!num && num !== 0) return '';
-    return num.toString().replace(/\B(?=(\d{3})+(?!\\d))/g, ".");
+    // Pakai standar format uang Indonesia bawaan JS, dijamin ga akan salah titik
+    return new Intl.NumberFormat('id-ID').format(num); 
   };
 
   const unformatRibuan = (str) => {
     if (!str) return 0;
-    return Number(str.toString().replace(/\./g, ''));
+    // Bersihkan semua karakter selain angka (termasuk titik/huruf)
+    return Number(str.toString().replace(/[^0-9-]/g, ''));
   };
 
   let cachedData = [];
@@ -327,8 +329,17 @@
     // Set default tanggal hari ini
     document.getElementById('txTanggal').value = new Date().toISOString().split('T')[0];
     
-    // Dengarkan perubahan jenis transaksi untuk ganti isi dropdown kategori
-    $('input[name="jenis"]').change(updateKategoriDropdown);
+    // Perbaikan Bug 4: Paksa update dropdown saat radio box diklik
+    $('input[name="jenis"]').on('change', function() {
+      updateKategoriDropdown();
+    });
+
+    // Perbaikan Bug 4: Bersihkan form dan sinkronkan ulang setiap kali modal ditutup
+    $('#formModal').on('hidden.bs.modal', function () {
+      document.getElementById('trxForm').reset();
+      document.getElementById('txTanggal').value = new Date().toISOString().split('T')[0];
+      updateKategoriDropdown();
+    });
   });
 
   async function loadDropdown() {
